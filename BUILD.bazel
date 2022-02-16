@@ -1,0 +1,38 @@
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+load("@build_bazel_rules_apple//apple:apple.bzl", "apple_static_framework_import")
+
+# Step1: `bazel build parent` (the example is Intel macOS)
+
+swift_library(
+    name = 'MyModule',
+    module_name = 'MyModule',
+    srcs = glob(["MyModule/*.swift"]),
+)
+
+
+swift_library(
+    name = 'parent',
+    module_name = 'parent',
+    srcs = glob(["Sources/*.swift"]),
+    deps = ['MyModule', 'irrelevant']
+)
+
+# This library makes sure parent receives `-Ibazel-out/darwin-fastbuild/bin`
+swift_library(
+    name = 'irrelevant',
+    module_name = 'irrelevant',
+    srcs = glob(["Irrelevant/*.swift"]),
+)
+
+
+# Step2: 
+# 1. Comment out the existing 'MyModule' above and uncomment 'MyModule' that uses if from .framework
+# 2. To emulate new version, MyModule.framework has new API - align it in Sources/Parent.swift
+# 3. `bazel build parent` fails
+# 4. `bazel clean`
+# 5. `bazel build parent` succeeds
+
+# apple_static_framework_import(
+#     name = 'MyModule',
+#     framework_imports = glob(["vendor/MyModule.framework/**"]),
+# )
